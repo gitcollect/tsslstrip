@@ -75,7 +75,7 @@ class ClientRequest(Request):
 
         if ip_address != None:
             logging.debug('Host was cached')
-            return defer.succeed(address)
+            return defer.succeed(ip_address)
         else:
             logging.debug('Host not cached')
             return reactor.resolve(host)
@@ -83,40 +83,40 @@ class ClientRequest(Request):
     """
     When host got resolved to an IP address successfully
     """
-    def host_resolved_success(self, address):
-        logging.debug("Resolved host successfully: %s -> %s" % (self.getHeader('host'), address))
-        host              = self.getHeader("host")
-        headers           = self.cleanHeaders()
-        client            = self.getClientIP()
-        path              = self.getPathFromUri()
+    def host_resolved_success(self, ip_address):
+        host = self.getHeader('host')
 
-        self.content.seek(0,0)
-        postData          = self.content.read()
-        url               = 'http://' + host + path
+        logging.debug('Resolved host successfully: {0} -> {1}'.format(host, ip_address))
 
-        self.dnsCache.put(host, address)
+        headers = self.cleanHeaders()
+        ip_address_client = self.getClientIP()
+        path = self.getPathFromUri()
 
-        if (not self.cookieCleaner.isClean(self.method, client, host, headers)):
-            logging.debug("Sending expired cookies...")
-            self.sendExpiredCookies(host, path, self.cookieCleaner.getExpireHeaders(self.method, client,
-                                                                                    host, headers, path))
-        elif (self.urlMonitor.isSecureFavicon(client, path)):
-            logging.debug("Sending spoofed favicon response...")
-            self.sendSpoofedFaviconResponse()
-        elif (self.urlMonitor.isSecureLink(client, url)):
+        self.content.seek(0, 0)
+        post_data = self.content.read()
+        url = 'http://' + host + path
+
+        self.dns_cache.put(host, address)
+
+        if (not self.cookieCleaner.is_clean(self.method, ip_address_client, host, headers)):
+            logging.debug('Sending expired cookies...')
+            self.send_expired_cookies(host, path, self.cookie_cleaner.get_expire_headers(self.method, ip_address_client, host, headers, path))
+        elif (self.urlMonitor.isSecureLink(ip_address_client, url)):
             logging.debug("Sending request via SSL...")
-            self.proxyViaSSL(address, self.method, path, postData, headers,
-                             self.urlMonitor.getSecurePort(client, url))
+            self.proxyViaSSL(address, self.method, path, postData, headers, self.urlMonitor.getSecurePort(ip_address_client, url))
         else:
             logging.debug("Sending request via HTTP...")
             self.proxyViaHTTP(address, self.method, path, postData, headers)
 
+    def send_expired_cookies(self, host, path, expire_headers):
+        self.setResponseCode(302, 'Moved')
+        self.setHeader('Connection', 'close')
+        self.setHeader('Location', 'http://' + host + path)
+        
+        for header in expire_headers:
+            self.setHeader('Set-Cookie', header)
 
-
-
-
-
-
+        self.finish()  
 
 
 
@@ -134,27 +134,7 @@ class ClientRequest(Request):
         connectionFactory          = ServerConnectionFactory(method, path, postData, headers, self)
         connectionFactory.protocol = SSLServerConnection
         self.reactor.connectSSL(host, port, connectionFactory, clientContextFactory)
-
-    def sendExpiredCookies(self, host, path, expireHeaders):
-        self.setResponseCode(302, "Moved")
-        self.setHeader("Connection", "close")
-        self.setHeader("Location", "http://" + host + path)
-        
-        for header in expireHeaders:
-            self.setHeader("Set-Cookie", header)
-
-        self.finish()        
-        
-    def sendSpoofedFaviconResponse(self):
-        icoFile = open(self.getPathToLockIcon())
-
-        self.setResponseCode(200, "OK")
-        self.setHeader("Content-type", "image/x-icon")
-        self.write(icoFile.read())
-                
-        icoFile.close()
-        self.finish()
-
+      
 
     def cleanHeaders(self):
         headers = self.getAllHeaders().copy()
@@ -170,22 +150,9 @@ class ClientRequest(Request):
 
         return headers
 
-
-
     def getPathFromUri(self):
         if (self.uri.find("http://") == 0):
             index = self.uri.find('/', 7)
             return self.uri[index:]
 
-        return self.uri        
-
-    def getPathToLockIcon(self):
-        if os.path.exists("lock.ico"): return "lock.ico"
-
-        scriptPath = os.path.abspath(os.path.dirname(sys.argv[0]))
-        scriptPath = os.path.join(scriptPath, "../share/sslstrip/lock.ico")
-
-        if os.path.exists(scriptPath): return scriptPath
-
-        logging.warning("Error: Could not find lock.ico")
-        return "lock.ico"    
+        return self.uri

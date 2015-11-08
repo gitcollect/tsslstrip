@@ -16,7 +16,7 @@
 # USA
 
 """
-The DNSCache maintains a cache of DNS lookups for thecurrent runtime.
+The DNSCache maintains a cache of DNS lookups for the current runtime.
 """
 class DNSCache:    
 
@@ -32,7 +32,7 @@ class DNSCache:
         self.cache = {}
 
     """
-    Add a new host and ip ip_address to the cache object
+    Add a new host and IP address to the cache object
     """
     def put(self, host, ïp_address):
         self.cache[host] = ïp_address
