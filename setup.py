@@ -1,56 +1,68 @@
 #!/usr/bin/env python
-import sys, os, shutil
-from distutils.core import setup, Extension
 
+import config
+import sys
+import os
+import shutil
 
-shutil.copyfile("sslstrip.py", "sslstrip/sslstrip")
+from distutils.core import setup
+from distutils.core import Extension
 
-setup  (name        = 'sslstrip',
-        version     = '0.9',
-        description = 'A MITM tool that implements Moxie Marlinspike\'s HTTPS stripping attacks.',
-        author = 'Moxie Marlinspike',
-        author_email = 'moxie@thoughtcrime.org',
-        url = 'http://www.thoughtcrime.org/software/sslstrip/',
-        license = 'GPL',
-        packages  = ["sslstrip"],
-        package_dir = {'sslstrip' : 'sslstrip/'},
-        scripts = ['sslstrip/sslstrip'],
-        data_files = [('share/sslstrip', ['README', 'COPYING', 'lock.ico'])],
-       )
+class Installation:
 
-print "Cleaning up..."
-try:
-    removeall("build/")
-    os.rmdir("build/")
-except:
-    pass
+    """
+    TSSLSTRIP installation
+    """
+    def __init__(self):
+        print('Installing {0} ...'.format(config.name))
+        shutil.copyfile('tsslstrip.py', 'tsslstrip/tsslstrip')
+        setup(
+            name = 'tsslstrip',
+            version = config.version,
+            description = config.description,
+            author = config.author,
+            author_email = config.author_email,
+            license = 'GPL',
+            packages = ['tsslstrip'],
+            packages_dir = {'tsslstrip' : 'tsslstrip/'},
+            scripts = ['tsslstrip/tsslstrip'],
+            data_files = [('share/tsslstrip', ['README', 'LICENSE'])]
+        )
 
-try:
-    os.remove("sslstrip/sslstrip")
-except:
-    pass
+        print('Cleaning up build directory...')
+        self.remove_all('build/')
+        self.remove_generic('tsslstrip/tsslstrip', os.remove)
 
-def capture(cmd):
-    return os.popen(cmd).read().strip()
+        print('Installation complete.')
+        print('Happy stripping!')
 
-def removeall(path):
-	if not os.path.isdir(path):
-		return
+    """
+    Delete the given folder and contents
+    """
+    def remove_all(self, path):
+        if not os.path.isdir(path):
+            return
 
-	files=os.listdir(path)
+        files = os.listdir(path)
 
-	for x in files:
-		fullpath=os.path.join(path, x)
-		if os.path.isfile(fullpath):
-			f=os.remove
-			rmgeneric(fullpath, f)
-		elif os.path.isdir(fullpath):
-			removeall(fullpath)
-			f=os.rmdir
-			rmgeneric(fullpath, f)
+        for afile in files:
+            fullpath = os.path.join(path, afile)
+            if os.path.isfile(fullpath):
+                self.remove_generic(fullpath, os.remove)
+            elif os.path.isdir(fullpath):
+                self.removeall(fullpath)
+                self.remove_generic(fullpath, os.rmdir)
 
-def rmgeneric(path, __func__):
-	try:
-		__func__(path)
-	except OSError, (errno, strerror):
-		pass
+        self.remove_generic(path, os.rmdir)
+
+    """
+    Run given function with path as parameter. Catches OSError
+    """
+    def remove_generic(path, __func__):
+        try:
+            __func__(path)
+        except OSError, (errno, strerror, filename):
+            print('File could not be deleted: {0}'.format(filename))
+            print('Got exception: {0}'.format(strerror))
+
+Installation()

@@ -1,0 +1,5 @@
+name = 'Targeted SSLSTRIP'
+description = 'A targeted MITM tool that implements Moxie Marlinspike\'s SSL stripping attacks.'
+version = '0.0.1'
+author = 'Tijme Gommers, Moxie Marlinspike'
+author_email = 't.gommers@jetcat.nl, moxie@thoughtcrime.org'

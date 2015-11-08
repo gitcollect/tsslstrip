@@ -1,4 +1,4 @@
-# Copyright (c) 2004-2009 Moxie Marlinspike
+# Copyright (c) 2004-2015 Moxie Marlinspike, Tijme Gommers
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -14,9 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
-#
 
-import urlparse, logging, os, sys, random
+import urlparse
+import logging
+import os
+import sys
+import random
 
 from twisted.web.http import Request
 from twisted.web.http import HTTPChannel
@@ -34,13 +37,15 @@ from URLMonitor import URLMonitor
 from CookieCleaner import CookieCleaner
 from DnsCache import DnsCache
 
+"""
+This class represents incoming client requests and is essentially where
+the magic begins.  Here we remove the client headers we dont like, and then
+respond with either favicon spoofing, session denial, or proxy through HTTP
+or SSL to the server.
+"""
 class ClientRequest(Request):
 
-    ''' This class represents incoming client requests and is essentially where
-    the magic begins.  Here we remove the client headers we dont like, and then
-    respond with either favicon spoofing, session denial, or proxy through HTTP
-    or SSL to the server.
-    '''    
+
     
     def __init__(self, channel, queued, reactor=reactor):
         Request.__init__(self, channel, queued)
