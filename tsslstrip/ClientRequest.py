@@ -101,13 +101,16 @@ class ClientRequest(Request):
         if (not self.cookieCleaner.is_clean(self.method, ip_address_client, host, headers)):
             logging.debug('Sending expired cookies...')
             self.send_expired_cookies(host, path, self.cookie_cleaner.get_expire_headers(self.method, ip_address_client, host, headers, path))
-        elif (self.urlMonitor.isSecureLink(ip_address_client, url)):
-            logging.debug("Sending request via SSL...")
-            self.proxyViaSSL(address, self.method, path, postData, headers, self.urlMonitor.getSecurePort(ip_address_client, url))
+        elif (self.url_monitor.isSecureLink(ip_address_client, url)):
+            logging.debug('Sending request via SSL...')
+            self.proxyViaSSL(address, self.method, path, postData, headers, self.url_monitor.get_secure_port(ip_address_client, url))
         else:
-            logging.debug("Sending request via HTTP...")
+            logging.debug('Sending request via HTTP...')
             self.proxyViaHTTP(address, self.method, path, postData, headers)
 
+    """
+    Send the expired cookie headers and finish the request
+    """
     def send_expired_cookies(self, host, path, expire_headers):
         self.setResponseCode(302, 'Moved')
         self.setHeader('Connection', 'close')
@@ -117,6 +120,8 @@ class ClientRequest(Request):
             self.setHeader('Set-Cookie', header)
 
         self.finish()  
+
+
 
 
 
