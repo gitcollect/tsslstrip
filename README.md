@@ -1,4 +1,4 @@
-# Targeted SSLSTRIP
+# Targeted SSLSTRIP (under development)
 ### A targeted MITM tool that implements Moxie Marlinspike's HTTPS stripping attacks.
 
 > **Warning:** 
