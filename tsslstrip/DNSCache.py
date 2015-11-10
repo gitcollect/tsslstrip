@@ -34,8 +34,8 @@ class DNSCache:
     """
     Add a new host and IP address to the cache object
     """
-    def put(self, host, ïp_address):
-        self.cache[host] = ïp_address
+    def put(self, host, ip_address):
+        self.cache[host] = ip_address
 
     """
     Get the IP address for the host from the cache object. 
