@@ -81,16 +81,16 @@ class ClientRequest(Request):
             return reactor.resolve(host)
 
     """
-    When host got resolved to an IP address successfully
+    Callback when host got resolved to an IP address successfully
     """
     def host_resolved_success(self, ip_address):
         host = self.getHeader('host')
 
         logging.debug('Resolved host successfully: {0} -> {1}'.format(host, ip_address))
 
-        headers = self.cleanHeaders()
+        headers = self.clean_headers()
         ip_address_client = self.getClientIP()
-        path = self.getPathFromUri()
+        path = self.get_path_from_uri()
 
         self.content.seek(0, 0)
         post_data = self.content.read()
@@ -101,12 +101,12 @@ class ClientRequest(Request):
         if (not self.cookieCleaner.is_clean(self.method, ip_address_client, host, headers)):
             logging.debug('Sending expired cookies...')
             self.send_expired_cookies(host, path, self.cookie_cleaner.get_expire_headers(self.method, ip_address_client, host, headers, path))
-        elif (self.url_monitor.isSecureLink(ip_address_client, url)):
+        elif (self.url_monitor.is_secure_link(ip_address_client, url)):
             logging.debug('Sending request via SSL...')
-            self.proxyViaSSL(address, self.method, path, postData, headers, self.url_monitor.get_secure_port(ip_address_client, url))
+            self.proxy_via_ssl(address, self.method, path, post_data, headers, self.url_monitor.get_secure_port(ip_address_client, url))
         else:
             logging.debug('Sending request via HTTP...')
-            self.proxyViaHTTP(address, self.method, path, postData, headers)
+            self.proxy_via_http(address, self.method, path, post_data, headers)
 
     """
     Send the expired cookie headers and finish the request
@@ -119,29 +119,35 @@ class ClientRequest(Request):
         for header in expire_headers:
             self.setHeader('Set-Cookie', header)
 
-        self.finish()  
-
-
-
-
-
-    def host_resolved_error(self, error):
-        logging.warning("Host resolution error: " + str(error))
         self.finish()
+
+    """
+    Proxy the request via SSL
+    """
+    def proxy_via_ssl(self, host, method, path, post_data, headers, port):
+        connection_factory = ServerConnectionFactory(method, path, post_data, headers, self)
+        connection_factory.protocol = SSLServerConnection
+        self.reactor.connectSSL(host, port, connection_factory, ssl.ClientContextFactory())
         
-    def proxyViaHTTP(self, host, method, path, postData, headers):
-        connectionFactory          = ServerConnectionFactory(method, path, postData, headers, self)
-        connectionFactory.protocol = ServerConnection
-        self.reactor.connectTCP(host, 80, connectionFactory)
+    """
+    Proxy the request via HTTP
+    """
+    def proxy_via_http(self, host, method, path, post_data, headers):
+        connection_factory = ServerConnectionFactory(method, path, post_data, headers, self)
+        connection_factory.protocol = ServerConnection
+        self.reactor.connectTCP(host, 80, connection_factory)
 
-    def proxyViaSSL(self, host, method, path, postData, headers, port):
-        clientContextFactory       = ssl.ClientContextFactory()
-        connectionFactory          = ServerConnectionFactory(method, path, postData, headers, self)
-        connectionFactory.protocol = SSLServerConnection
-        self.reactor.connectSSL(host, port, connectionFactory, clientContextFactory)
+    """
+    Callback if host could not be resolved
+    """
+    def host_resolved_error(self, error):
+        logging.warning('Host resolution error: {0}'.format(str(error)))
+        self.finish()
       
-
-    def cleanHeaders(self):
+    """
+    Delete cache headers from request
+    """
+    def clean_headers(self):
         headers = self.getAllHeaders().copy()
 
         if 'accept-encoding' in headers:
@@ -155,8 +161,11 @@ class ClientRequest(Request):
 
         return headers
 
-    def getPathFromUri(self):
-        if (self.uri.find("http://") == 0):
+    """
+    Get the path from the current request URI
+    """
+    def get_path_from_uri(self):
+        if (self.uri.find('http://') == 0):
             index = self.uri.find('/', 7)
             return self.uri[index:]
 
