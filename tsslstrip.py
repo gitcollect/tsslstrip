@@ -68,7 +68,7 @@ def main(argv):
     (log_file, port) = parse_options(argv)
         
     logging.basicConfig(
-        level=logging.WARNING, 
+        level=logging.DEBUG, 
         format='%(asctime)s %(message)s',
         filename=log_file, 
         filemode='w'

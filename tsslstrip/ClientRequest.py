@@ -50,6 +50,9 @@ class ClientRequest(Request):
     """
     def __init__(self, channel, queued, reactor = reactor):
         Request.__init__(self, channel, queued)
+
+        logging.debug('Client request initiated...')
+
         self.reactor = reactor
         self.url_monitor = URLMonitor.get_instance()
         self.cookie_cleaner = CookieCleaner.get_instance()
