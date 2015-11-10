@@ -35,21 +35,30 @@ class URLMonitor:
         self.stripped_urls = set()
         self.stripped_url_ports = {}
 
+    """
+    Check if client and url are in the stripped urls set
+    """
     def is_secure_link(self, client, url):
         return (client, url) in self.stripped_urls
 
+    """
+    Get the SSL port for the given client and url
+    """
     def get_secure_port(self, client, url):
         if (client, url) in self.stripped_urls:
             return self.stripped_url_ports[(client, url)]
         else:
             return 443
 
+    """
+    Add a link to the set
+    """
     def add_secure_link(self, client, url):
-        method_index = url.find("//") + 2
-        method = url[0:method_index]
+        protocol_index = url.find("//") + 2
+        protocol = url[0:protocol_index]
 
-        path_index = url.find("/", method_index)
-        host = url[method_index:path_index]
+        path_index = url.find("/", protocol_index)
+        host = url[protocol_index:path_index]
         path = url[path_index:]
 
         port = 443
@@ -61,7 +70,7 @@ class URLMonitor:
             if len(port) == 0:
                 port = 443
         
-        url = method + host + path
+        url = protocol + host + path
 
         self.stripped_urls.add((client, url))
         self.stripped_url_ports[(client, url)] = int(port)

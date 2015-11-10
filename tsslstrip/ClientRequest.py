@@ -61,7 +61,7 @@ class ClientRequest(Request):
     def process(self):
         host = self.getHeader('host')
 
-        logging.debug('Resolving host: {0}'.format(host)
+        logging.debug('Resolving host: {0}'.format(host))
         deferred = self.resolve_host(host)
 
         deferred.addCallback(self.host_resolved_success)
@@ -145,7 +145,7 @@ class ClientRequest(Request):
         self.finish()
       
     """
-    Delete cache headers from request
+    Delete cache and compression headers from request
     """
     def clean_headers(self):
         headers = self.getAllHeaders().copy()
