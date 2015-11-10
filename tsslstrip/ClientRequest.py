@@ -71,11 +71,11 @@ class ClientRequest(Request):
     Check if host is cached in DNS Cache, otherwise resolve it
     """
     def resolve_host(self, host):
-        ip_address = self.dns_cache.get(host)
+        address = self.dns_cache.get(host)
 
-        if ip_address != None:
+        if address != None:
             logging.debug('Host was cached')
-            return defer.succeed(ip_address)
+            return defer.succeed(address)
         else:
             logging.debug('Host not cached')
             return reactor.resolve(host)
@@ -83,10 +83,10 @@ class ClientRequest(Request):
     """
     Callback when host got resolved to an IP address successfully
     """
-    def host_resolved_success(self, ip_address):
+    def host_resolved_success(self, address):
         host = self.getHeader('host')
 
-        logging.debug('Resolved host successfully: {0} -> {1}'.format(host, ip_address))
+        logging.debug('Resolved host successfully: {0} -> {1}'.format(host, address))
 
         headers = self.clean_headers()
         ip_address_client = self.getClientIP()
