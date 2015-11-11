@@ -60,7 +60,7 @@ class CookieCleaner:
         if not 'cookie' in headers:
             return True
 
-        return (client, self.get_domain_for_host(host)) in self.cleaned_cookies
+        return (ip_address_client, self.get_domain_for_host(host)) in self.cleaned_cookies
 
     """
     Get the domain for the given host

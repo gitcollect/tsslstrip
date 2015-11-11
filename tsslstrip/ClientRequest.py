@@ -101,7 +101,7 @@ class ClientRequest(Request):
 
         self.dns_cache.put(host, address)
 
-        if (not self.cookieCleaner.is_clean(self.method, ip_address_client, host, headers)):
+        if (not self.cookie_cleaner.is_clean(self.method, ip_address_client, host, headers)):
             logging.debug('Sending expired cookies...')
             self.send_expired_cookies(host, path, self.cookie_cleaner.get_expire_headers(self.method, ip_address_client, host, headers, path))
         elif (self.url_monitor.is_secure_link(ip_address_client, url)):

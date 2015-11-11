@@ -68,7 +68,7 @@ class SSLServerConnection(ServerConnection):
 
         if not absoluteLink == "":                
             absoluteLink = absoluteLink.replace('&amp;', '&')
-            self.urlMonitor.addSecureLink(self.client.getClientIP(), absoluteLink);        
+            self.url_monitor.add_secure_link(self.client.getClientIP(), absoluteLink);        
 
     def replaceCssLinks(self, data):
         iterator = re.finditer(SSLServerConnection.cssExpression, data)
